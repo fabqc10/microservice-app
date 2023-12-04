@@ -1,30 +1,25 @@
 package com.fabdev.fraud;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Service;
 
-import javax.persistence.*;
 import java.time.LocalDate;
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@Entity
+@Service
 public class FraudCheckService {
-    @Id
-    @SequenceGenerator(
-            name = "fraud_id_sequence",
-            sequenceName = "fraud_id_sequence"
-    )
-    @GeneratedValue(
-            strategy = GenerationType.SEQUENCE,
-            generator = "fraud_id_sequence"
-    )
-    private Integer id;
-    private Integer customerId;
-    private Boolean isFraudster;
-    private LocalDate createdAt;
+    private final FraudCheckHistoryRepository fraudCheckHistoryRepository;
+
+    public FraudCheckService(FraudCheckHistoryRepository fraudCheckHistoryRepository) {
+        this.fraudCheckHistoryRepository = fraudCheckHistoryRepository;
+    }
+
+    public boolean isFraudulentCustomer(Integer customerId) {
+        fraudCheckHistoryRepository.save(
+                FraudCheckHistory.builder()
+                        .customerId(customerId)
+                        .isFraudster(false)
+                        .createdAt(LocalDate.now())
+                        .build()
+        );
+        return false;
+    }
 }

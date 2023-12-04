@@ -3,7 +3,13 @@ package com.fabdev.customer;
 import org.springframework.stereotype.Service;
 
 @Service
-public record CustomerService(CustomerRepository customerRepository) {
+public class CustomerService {
+    private final CustomerRepository customerRepository;
+
+    public CustomerService(CustomerRepository customerRepository) {
+        this.customerRepository = customerRepository;
+    }
+
     public void registerCustomer(CustomerRegistrationRequest request) {
         Customer customer = Customer.builder()
                 .firstName(request.firstName())
