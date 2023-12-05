@@ -3,6 +3,7 @@ package com.fabdev.fraud;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class FraudCheckService {
@@ -17,7 +18,7 @@ public class FraudCheckService {
                 FraudCheckHistory.builder()
                         .customerId(customerId)
                         .isFraudster(false)
-                        .createdAt(LocalDate.now())
+                        .createdAt(LocalDateTime.now())
                         .build()
         );
         return false;
