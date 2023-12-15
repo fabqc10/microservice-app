@@ -1,5 +1,6 @@
 package com.fabdev.customer;
 
+import com.fabdev.amqp.RabbitMQMessageProducer;
 import com.fabdev.clients.fraud.FraudCheckResponse;
 import com.fabdev.clients.fraud.FraudClient;
 import com.fabdev.clients.notification.NotificationClient;
@@ -10,15 +11,17 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class CustomerService {
     private final CustomerRepository customerRepository;
-    private final RestTemplate restTemplate;
+//    private final RestTemplate restTemplate;
     private final FraudClient fraudClient;
-    private final NotificationClient notificationClient;
+//    private final NotificationClient notificationClient;
+    private final RabbitMQMessageProducer rabbitMQMessageProducer;
 
-    public CustomerService(CustomerRepository customerRepository, RestTemplate restTemplate, FraudClient fraudClient, NotificationClient notificationClient) {
+    public CustomerService(CustomerRepository customerRepository, RestTemplate restTemplate, FraudClient fraudClient, NotificationClient notificationClient, RabbitMQMessageProducer rabbitMQMessageProducer) {
         this.customerRepository = customerRepository;
-        this.restTemplate = restTemplate;
+//        this.restTemplate = restTemplate;
         this.fraudClient = fraudClient;
-        this.notificationClient = notificationClient;
+//        this.notificationClient = notificationClient;
+        this.rabbitMQMessageProducer = rabbitMQMessageProducer;
     }
 
     public void registerCustomer(CustomerRegistrationRequest request) {
@@ -43,14 +46,29 @@ public class CustomerService {
         if (fraudCheckResponse.isFraudster()){
             throw new IllegalStateException("Fraudster");
         }
-        //todo: make it async. i.e add to queue
-        notificationClient.sendNotification(
-                new NotificationRequest(
-                        customer.getId(),
-                        customer.getEmail(),
-                        String.format("Hi %s, Welcome to Microservices",
-                                customer.getFirstName())
-                        )
+
+        // Since we are using the message producer we no longer need to send the notification directly
+//        notificationClient.sendNotification(
+//                new NotificationRequest(
+//                        customer.getId(),
+//                        customer.getEmail(),
+//                        String.format("Hi %s, Welcome to Microservices",
+//                                customer.getFirstName())
+//                        )
+//        );
+
+        //todo: make it async. i.e add to queue - done!
+        NotificationRequest notificationRequest = new NotificationRequest(
+                customer.getId(),
+                customer.getEmail(),
+                String.format("Hi %s, Welcome to Microservices"
+                        ,customer.getFirstName())
+        );
+
+        rabbitMQMessageProducer.publish(
+                notificationRequest,
+                "internal.exchange",
+                "internal.notification.routing-key"
         );
 
     }
